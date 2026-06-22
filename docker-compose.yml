@@ -1,0 +1,11 @@
+services:
+  mcv-oauth-playground:
+    build: .
+    container_name: mcv-oauth-playground
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-3001}:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: 3000

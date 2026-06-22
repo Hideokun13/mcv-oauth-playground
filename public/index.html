@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyCourseVille OAuth 2.0 Playground</title>
+  <!-- Google Fonts: Inter and Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Link Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="background-glows">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+  </div>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="logo-text">
+          <h1>MyCourseVille</h1>
+          <span>OAuth 2.0 Playground</span>
+        </div>
+      </div>
+      <div class="connection-status-badge" id="statusBadge">
+        <span class="status-dot"></span>
+        <span class="status-text">Checking Config...</span>
+      </div>
+    </header>
+
+    <main class="app-grid">
+      <!-- Left Panel: Configuration & Session Actions -->
+      <section class="panel-left">
+        <!-- Configuration State Banner / Warning -->
+        <div class="card config-card warning" id="configWarningCard">
+          <div class="card-header">
+            <i class="fa-solid fa-circle-exclamation card-icon"></i>
+            <h2>Configuration Required</h2>
+          </div>
+          <div class="card-body">
+            <p>Your MyCourseVille OAuth credentials are not fully set up in the <code>.env</code> file yet.</p>
+            <div class="steps-box">
+              <ol>
+                <li>Open the <code>.env</code> file in the project folder.</li>
+                <li>Set your <code>MCV_CLIENT_ID</code> and <code>MCV_CLIENT_SECRET</code>.</li>
+                <li>Ensure the redirect URI matches the one registered.</li>
+                <li>Restart the server (run <code>npm run dev</code>).</li>
+              </ol>
+            </div>
+            <p class="config-note">If you don't have credentials, request them by emailing <strong>courseville@gmail.com</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Connection Card (Login Action) -->
+        <div class="card connect-card" id="connectCard" style="display: none;">
+          <div class="card-header">
+            <i class="fa-solid fa-key card-icon"></i>
+            <h2>Authorize Application</h2>
+          </div>
+          <div class="card-body">
+            <p>Connect this application to your MyCourseVille account to fetch user information and test API integration.</p>
+            <div class="client-info-table">
+              <div class="info-row">
+                <span class="info-label">Client ID</span>
+                <span class="info-value code-font" id="displayClientId">Loading...</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Redirect URI</span>
+                <span class="info-value code-font" id="displayRedirectUri">Loading...</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Scope</span>
+                <span class="info-value badge">public</span>
+              </div>
+            </div>
+            <a href="login" class="btn btn-primary btn-block" id="loginBtn">
+              <i class="fa-brands fa-oauth"></i> Connect with MyCourseVille
+            </a>
+          </div>
+        </div>
+
+        <!-- Session Status & Details (Shown only when logged in) -->
+        <div class="card session-card" id="sessionCard" style="display: none;">
+          <div class="card-header">
+            <i class="fa-solid fa-clock-rotate-left card-icon"></i>
+            <h2>Active OAuth Session</h2>
+          </div>
+          <div class="card-body">
+            <div class="session-stat-grid">
+              <div class="stat-box">
+                <span class="stat-label">Expires In</span>
+                <span class="stat-value highlight" id="sessionExpiry">0s</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Token Status</span>
+                <span class="stat-value text-success" id="tokenStatus">Active</span>
+              </div>
+            </div>
+
+            <div class="token-details-list">
+              <div class="token-field">
+                <label>Access Token (masked; stored server-side)</label>
+                <div class="token-input-group">
+                  <input type="password" id="accessTokenField" readonly value="********************">
+                  <button class="btn-icon" id="toggleAccessToken" title="Show/Hide Token"><i class="fa-solid fa-eye"></i></button>
+                  <button class="btn-icon" id="copyAccessToken" title="Copy Token"><i class="fa-solid fa-copy"></i></button>
+                </div>
+              </div>
+
+              <div class="token-field">
+                <label>Refresh Token (masked; stored server-side)</label>
+                <div class="token-input-group">
+                  <input type="password" id="refreshTokenField" readonly value="********************">
+                  <button class="btn-icon" id="toggleRefreshToken" title="Show/Hide Token"><i class="fa-solid fa-eye"></i></button>
+                  <button class="btn-icon" id="copyRefreshToken" title="Copy Token"><i class="fa-solid fa-copy"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="session-actions">
+              <button class="btn btn-secondary" id="refreshBtn">
+                <i class="fa-solid fa-rotate"></i> Refresh Token
+              </button>
+              <a href="logout" class="btn btn-danger" id="logoutBtn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: User Data & Log Output -->
+      <section class="panel-right">
+        <!-- User Profile Card -->
+        <div class="card profile-card" id="profileCard">
+          <div class="card-header">
+            <i class="fa-solid fa-user-astronaut card-icon"></i>
+            <h2>MyCourseVille Profile</h2>
+          </div>
+          <div class="card-body profile-placeholder" id="profilePlaceholder">
+            <div class="placeholder-icon">
+              <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <p>Log in with MyCourseVille to see your account profile and public API data here.</p>
+          </div>
+          <div class="card-body profile-content" id="profileContent" style="display: none;">
+            <div class="profile-header-info">
+              <div class="avatar-container">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=mcv" alt="Avatar" id="userAvatar">
+              </div>
+              <div class="user-names">
+                <h3 id="userFullName">User Name</h3>
+                <span class="user-handle" id="userEmail">user@email.com</span>
+              </div>
+            </div>
+
+            <div class="api-rate-limits">
+              <div class="rate-bar-container">
+                <div class="rate-bar-header">
+                  <span>API Rate Limit (Requests/Min)</span>
+                  <span id="rateLimitText">60 / 60</span>
+                </div>
+                <div class="rate-bar-track">
+                  <div class="rate-bar-fill" id="rateLimitFill" style="width: 100%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-details-grid">
+              <div class="detail-item">
+                <span class="detail-label">User ID</span>
+                <span class="detail-value" id="userIdField">-</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Username</span>
+                <span class="detail-value" id="userUsernameField">-</span>
+              </div>
+            </div>
+
+            <div class="json-viewer-container">
+              <div class="json-header">
+                <span>Raw JSON Response</span>
+                <button class="btn-small-icon" id="copyRawJson" title="Copy JSON"><i class="fa-solid fa-copy"></i></button>
+              </div>
+              <pre class="json-output"><code id="rawJsonResponse">{}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Debug / Console Card -->
+        <div class="card console-card">
+          <div class="card-header">
+            <i class="fa-solid fa-terminal card-icon"></i>
+            <h2>API Action Logs</h2>
+            <button class="btn-clear" id="clearConsoleBtn">Clear</button>
+          </div>
+          <div class="card-body console-body" id="consoleBody">
+            <div class="console-line system">[System] Loading client-side OAuth Playground components...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>MyCourseVille OAuth 2.0 Playground &bull; Tokens remain server-side</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
