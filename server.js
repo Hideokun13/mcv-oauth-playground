@@ -398,8 +398,16 @@ async function handle(req, res) {
           details: user,
         });
       }
+      const profile =
+        user &&
+        typeof user === "object" &&
+        user.user &&
+        typeof user.user === "object"
+          ? user.user
+          : user;
       return sendJson(res, 200, {
-        user,
+        user: profile,
+        raw: user,
         rateLimit: {
           limit: response.headers.get("x-ratelimit-limit"),
           remaining: response.headers.get("x-ratelimit-remaining"),

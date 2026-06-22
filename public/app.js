@@ -85,16 +85,27 @@ async function fetchUserProfile() {
     log("action", "Calling GET /users/me...");
     const result = await getJson("api/user");
     const user = result.user || {};
+    const englishName = [user.title_en, user.firstname_en, user.lastname_en]
+      .filter(Boolean)
+      .join(" ");
+    const thaiName = [user.title_th, user.firstname_th, user.lastname_th]
+      .filter(Boolean)
+      .join(" ");
     profilePlaceholder.style.display = "none";
     profileContent.style.display = "block";
     $("userFullName").textContent =
-      user.name || user.firstname_en || user.firstname || "MyCourseVille User";
+      user.name || englishName || thaiName || user.firstname || "MyCourseVille User";
     $("userEmail").textContent = user.email || "N/A";
     $("userIdField").textContent = user.id || user.uid || "N/A";
-    $("userUsernameField").textContent = user.username || user.uid || "N/A";
+    $("userUsernameField").textContent =
+      user.username || user.student_id || user.uid || "N/A";
     $("userAvatar").src =
-      user.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.id || "mcv")}`;
-    $("rawJsonResponse").textContent = JSON.stringify(user, null, 2);
+      user.avatar ||
+      user.avatar_url ||
+      user.profile_image ||
+      user.image ||
+      `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.id || englishName || "mcv")}`;
+    $("rawJsonResponse").textContent = JSON.stringify(result.raw || user, null, 2);
 
     const limit = Number(result.rateLimit?.limit || 60);
     const remaining = Number(result.rateLimit?.remaining || limit);
